@@ -3,6 +3,7 @@
 import React, { useRef, useEffect, useState, MouseEvent } from "react";
 import Image from "next/image";
 import Footer from "./components/Footer";
+import { Analytics } from "@vercel/analytics/react"
 
 export default function Home() {
   const [drawingColor, setDrawingColor] = useState("#ffffff");
@@ -200,6 +201,7 @@ export default function Home() {
 
   return (
     <div className="grid grid-rows-[20px_1fr_20px] bg-[var(--bg-a)] items-center justify-items-center min-h-screen p-8 pb-20 gap-8 font-[family-name:var(--font-geist-sans)]">
+      <Analytics />
       <main className="flex flex-col gap-8 row-start-2 items-center sm:items-center relative">
         <div className="relative border border-[var(--text-c)] bg-transparent p-2">
           {/* Base image */}
