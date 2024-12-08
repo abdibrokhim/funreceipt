@@ -199,7 +199,7 @@ export default function Home() {
   };
 
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] bg-[var(--bg-a)] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-8 font-[family-name:var(--font-geist-sans)]">
+    <div className="grid grid-rows-[20px_1fr_20px] bg-[var(--bg-a)] items-center justify-items-center min-h-screen p-8 pb-20 gap-8 font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-8 row-start-2 items-center sm:items-center relative">
         <div className="relative border border-[var(--text-c)] bg-transparent p-2">
           {/* Base image */}
@@ -233,7 +233,7 @@ export default function Home() {
   >
     <div
       ref={textEditorRef}
-      className="absolute w-96 shadow-2xl"
+      className="absolute w-80 shadow-2xl"
       style={{
         left: editorX,
         top: editorY,
@@ -268,11 +268,11 @@ export default function Home() {
             placeholder="Type your text..."
             value={textInput}
             onChange={(e) => setTextInput(e.target.value)}
-            className="w-full bg-white/10 border border-white/20 rounded-md text-[var(--text-a)] p-2 focus:outline-none focus:ring-2 focus:ring-[var(--text-b)] transition-all"
+            className="text-sm w-full bg-white/10 border border-white/20 rounded-md text-[var(--text-a)] p-2 focus:outline-none focus:ring-1 focus:ring-[var(--text-b)] transition-all"
           />
 
           {/* Formatting Buttons */}
-          <div className="flex items-center justify-center gap-2">
+          <div className="flex items-center justify-center gap-2 text-sm">
             {[
               { 
                 title: "Bold", 
@@ -317,14 +317,14 @@ export default function Home() {
             <button
               onClick={applyTextToCanvas}
               className="flex-1 bg-green-500/20 border border-green-500/30 text-green-500 
-                py-2 rounded-md hover:bg-green-500/30 transition-colors"
+                py-2 rounded-md hover:bg-green-500/30 transition-colors text-sm"
             >
               Apply
             </button>
             <button
               onClick={() => setShowTextEditor(false)}
               className="flex-1 bg-red-500/20 border border-red-500/30 text-red-500 
-                py-2 rounded-md hover:bg-red-500/30 transition-colors"
+                py-2 rounded-md hover:bg-red-500/30 transition-colors text-sm"
             >
               Cancel
             </button>
@@ -336,54 +336,89 @@ export default function Home() {
 )}
         </div>
 
-        {/* Toolbar */}
-        <div className="flex flex-row items-center gap-4 p-4 rounded-md bg-transparent border border-[var(--text-c)] w-full justify-between ">
-          {/* Brush Tools */}
-          <div className="flex items-center gap-2 bg-transparent border border-[var(--text-b)] p-2 rounded-lg">
-            <input
-              type="color"
-              value={drawingColor}
-              onChange={handleColorChange}
-              className="w-8 h-8 p-0 border-none outline-none focus:outline-none appearance-none bg-transparent cursor-pointer rounded-lg"
-            />
-            <input
-              type="text"
-              value={brushSize}
-              onChange={handleBrushSizeChange}
-              className="w-8 text-sm rounded-lg p-1 bg-transparent text-[var(--text-a)] border border-[var(--text-c)] focus:outline-none appearance-none"
-              title="Brush Size"
-              placeholder="size"
-            />
-          </div>
+{/* Toolbar */}
+<div className="flex flex-row items-center gap-4 p-3 bg-white/10 backdrop-blur-md rounded-xl border border-white/20 shadow-lg w-full justify-between">
+  {/* Color Picker and Brush Size Container */}
+  <div className="flex items-center space-x-3">
+    {/* Color Picker */}
+    <div className="relative group">
+    <input
+      type="color"
+      value={drawingColor}
+      onChange={handleColorChange}
+      className="w-10 h-10 p-0 border-none! outline-none! focus:outline-none! appearance-none bg-transparent cursor-pointer rounded-lg! input-none!"
+    />
+    </div>
 
-          {/* Text Mode Button */}
-          <button
-            onClick={() => setShowTextEditor(!showTextEditor)}
-            className="bg-transparent border border-[var(--text-b)] hover:bg-[var(--bg-b)] hover:border-[var(--text-c)] text-[var(--text-a)] py-2 px-4 sm:px-8 text-sm rounded-lg transition-colors"
-          >
-            <div className="flex flex-row">
-              <span className="mr-2">Editor</span>
-              <svg width="20" height="20" fill="#ffffff" viewBox="0 0 24 24"><path fill="#ffffff" fillRule="evenodd" d="M4 5.5a.5.5 0 0 1 .5-.5h15a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-1 0V6h-6.5v13H15a.5.5 0 0 1 0 1H9a.5.5 0 0 1 0-1h2.5V6H5v2.5a.5.5 0 0 1-1 0z" clipRule="evenodd"></path></svg>
-            </div>
-          </button>
+    {/* Brush Size Input */}
+    <div className="relative">
+      <input
+        type="text"
+        value={brushSize}
+        onChange={handleBrushSizeChange}
+        className="w-12 text-sm rounded-lg p-2 bg-white/10 text-[var(--text-a)] 
+          border border-white/20 focus:outline-none focus:ring-1 focus:ring-[var(--text-b)] 
+          transition-all"
+        title="Brush Size"
+        placeholder="Size"
+      />
+    </div>
+  </div>
 
-          {/* Download Button */}
-          <button
-            onClick={downloadImage}
-            className="flex items-center justify-center py-2 px-4 sm:px-8 text-sm rounded-lg transition-colors bg-transparent border border-[var(--text-b)] text-[var(--text-a)] hover:bg-[var(--bg-b)] hover:border-[var(--text-c)]"
-          >
-            <span className="mr-2">Download</span>
-            <Image
-              aria-hidden
-              src="/download.svg"
-              alt="Download Icon"
-              width={19}
-              height={19}
-            />
-          </button>
-        </div>
+  {/* Tool Action Buttons */}
+  <div className="flex items-center space-x-3">
+    {/* Text Editor Button */}
+    <button
+      onClick={() => setShowTextEditor(!showTextEditor)}
+      className="group flex items-center justify-center w-10 h-10 rounded-lg 
+        bg-white/10 border border-white/20 text-[var(--text-a)] 
+        hover:bg-white/20 hover:border-white/30 transition-all"
+      title="Text Editor"
+    >
+      <svg 
+        width="20" 
+        height="20" 
+        viewBox="0 0 24 24" 
+        className="group-hover:scale-110 transition-transform"
+      >
+        <path 
+          fill="currentColor" 
+          fillRule="evenodd" 
+          d="M4 5.5a.5.5 0 0 1 .5-.5h15a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-1 0V6h-6.5v13H15a.5.5 0 0 1 0 1H9a.5.5 0 0 1 0-1h2.5V6H5v2.5a.5.5 0 0 1-1 0z" 
+          clipRule="evenodd"
+        ></path>
+      </svg>
+    </button>
+
+    {/* Download Button */}
+    <button
+      onClick={downloadImage}
+      className="group flex items-center justify-center w-10 h-10 rounded-lg 
+        bg-white/10 border border-white/20 text-[var(--text-a)] 
+        hover:bg-white/20 hover:border-white/30 transition-all"
+      title="Download Image"
+    >
+      <svg 
+        xmlns="http://www.w3.org/2000/svg" 
+        width="20" 
+        height="20" 
+        viewBox="0 0 24 24" 
+        className="group-hover:scale-110 transition-transform"
+      >
+        <path 
+          fill="currentColor" 
+          d="M12 16l4-5h-3V4h-2v7H8z"
+        />
+        <path 
+          fill="currentColor" 
+          d="M20 18H4v-7H2v7c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2v-7h-2z"
+        />
+      </svg>
+    </button>
+  </div>
+</div>
       </main>
-      <Footer />
+        <Footer />
     </div>
   );
 }

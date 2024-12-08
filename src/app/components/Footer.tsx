@@ -6,7 +6,7 @@ import React, { useState } from "react";
 export default function Footer() {
 
   return (
-      <footer className="row-start-3 flex w-full max-w-3xl mx-auto flex-col md:flex-row-reverse gap-8 mt-16 md:mt-0 justify-between items-center pb-8">
+      <footer className="row-start-3 flex w-full max-w-3xl mx-auto flex-col md:flex-row-reverse gap-8 mt-24 md:mt-24 justify-between items-center pb-8">
         <div className="flex gap-2 flex-wrap items-center justify-center">
           <a
               aria-label="Open Community Email"
