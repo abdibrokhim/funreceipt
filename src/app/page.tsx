@@ -1,5 +1,4 @@
 'use client'
-
 // app/page.tsx
 import React, { useRef, useEffect, useState, MouseEvent } from "react";
 import Image from "next/image";
@@ -7,7 +6,7 @@ import Footer from "./components/Footer";
 
 export default function Home() {
   const [drawingColor, setDrawingColor] = useState("#ffffff");
-  const [brushSize, setBrushSize] = useState(3);
+  const [brushSize, setBrushSize] = useState("2");
   const [isDrawing, setIsDrawing] = useState(false);
 
   const [showTextEditor, setShowTextEditor] = useState(false);
@@ -17,9 +16,17 @@ export default function Home() {
   const [underline, setUnderline] = useState(false);
   const [strike, setStrike] = useState(false);
 
+  // For draggable text editor:
+  const [editorX, setEditorX] = useState(100); // default position
+  const [editorY, setEditorY] = useState(100);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffsetX, setDragOffsetX] = useState(0);
+  const [dragOffsetY, setDragOffsetY] = useState(0);
+
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
+  const textEditorRef = useRef<HTMLDivElement | null>(null);
 
   const [lastX, setLastX] = useState<number | null>(null);
   const [lastY, setLastY] = useState<number | null>(null);
@@ -64,8 +71,9 @@ export default function Home() {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
+    const size = parseInt(brushSize, 10) || 3;
     ctxRef.current.strokeStyle = drawingColor;
-    ctxRef.current.lineWidth = brushSize;
+    ctxRef.current.lineWidth = size;
     ctxRef.current.lineCap = "round";
 
     if (lastX !== null && lastY !== null) {
@@ -90,7 +98,9 @@ export default function Home() {
   };
 
   const handleBrushSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setBrushSize(Number(e.target.value));
+    // Just ensure it's a number
+    const val = e.target.value.replace(/[^0-9]/g, '');
+    setBrushSize(val);
   };
 
   const downloadImage = () => {
@@ -122,9 +132,10 @@ export default function Home() {
       return;
     }
 
-    // Position text at a default place. Let's say top-left corner offset.
-    const x = 50;
-    const y = 50;
+    // Use the editor position as the text position
+    // editorX, editorY corresponds to the panel's top-left corner.
+    const x = editorX;
+    const y = editorY;
 
     let fontWeight = bold ? "bold" : "normal";
     let fontStyle = italic ? "italic" : "normal";
@@ -168,10 +179,29 @@ export default function Home() {
     setStrike(false);
   };
 
+  const startDrag = (e: React.MouseEvent<HTMLDivElement>) => {
+    setIsDragging(true);
+    setDragOffsetX(e.clientX - editorX);
+    setDragOffsetY(e.clientY - editorY);
+  };
+
+  const onDrag = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDragging) return;
+    // Update position based on mouse move
+    const newX = e.clientX - dragOffsetX;
+    const newY = e.clientY - dragOffsetY;
+    setEditorX(newX);
+    setEditorY(newY);
+  };
+
+  const endDrag = () => {
+    setIsDragging(false);
+  };
+
   return (
     <div className="grid grid-rows-[20px_1fr_20px] bg-[var(--bg-a)] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-8 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start relative">
-        <div className="relative border border-[var(--text-b)] bg-transparent p-2">
+      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-center relative">
+        <div className="relative border border-[var(--text-c)] bg-transparent p-2">
           {/* Base image */}
           <Image
             ref={imageRef}
@@ -192,113 +222,163 @@ export default function Home() {
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
           />
-          {/* Text Editor Overlay */}
-          {showTextEditor && (
-            <div className="absolute top-10 left-10 border border-[var(--text-b)] bg-transparent p-4 flex flex-col gap-3 z-10">
-              <input
-                type="text"
-                placeholder="Type your text..."
-                value={textInput}
-                onChange={(e) => setTextInput(e.target.value)}
-                className="bg-transparent border border-[var(--text-b)] text-[var(--text-a)] p-1 focus:outline-none focus:ring-0"
-              />
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setBold(!bold)}
-                  className={`border border-[var(--text-b)] bg-transparent text-[var(--text-a)] p-1 ${
-                    bold ? "font-bold" : "font-normal"
-                  }`}
-                  title="Bold"
-                >
-                  B
-                </button>
-                <button
-                  onClick={() => setItalic(!italic)}
-                  className={`border border-[var(--text-b)] bg-transparent text-[var(--text-a)] p-1 ${
-                    italic ? "italic" : "normal"
-                  }`}
-                  title="Italic"
-                >
-                  I
-                </button>
-                <button
-                  onClick={() => setUnderline(!underline)}
-                  className={`border border-[var(--text-b)] bg-transparent text-[var(--text-a)] p-1 ${
-                    underline ? "underline" : "no-underline"
-                  }`}
-                  title="Underline"
-                >
-                  U
-                </button>
-                <button
-                  onClick={() => setStrike(!strike)}
-                  className={`border border-[var(--text-b)] bg-transparent text-[var(--text-a)] p-1 ${
-                    strike ? "line-through" : "no-underline"
-                  }`}
-                  title="Strikethrough"
-                >
-                  S
-                </button>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={applyTextToCanvas}
-                  className="border border-[var(--text-b)] bg-transparent text-[var(--text-a)] p-1 px-2"
-                >
-                  Apply
-                </button>
-                <button
-                  onClick={() => setShowTextEditor(false)}
-                  className="border border-[var(--text-b)] bg-transparent text-[var(--text-a)] p-1 px-2"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          )}
+
+          {/* Text Editor Overlay (Modal) */}
+{showTextEditor && (
+  <div 
+    className="fixed inset-0 z-20 flex items-center justify-center" 
+    style={{ background: 'rgba(0,0,0,0.5)'}}
+    onMouseMove={onDrag}
+    onMouseUp={endDrag}
+  >
+    <div
+      ref={textEditorRef}
+      className="absolute w-96 shadow-2xl"
+      style={{
+        left: editorX,
+        top: editorY,
+        cursor: isDragging ? 'grabbing' : 'grab'
+      }}
+      onMouseDown={startDrag}
+    >
+      <div 
+        className="bg-white/10 backdrop-blur-md rounded-lg border border-white/20 shadow-lg overflow-hidden"
+        onMouseDown={(e) => e.stopPropagation()} // prevent drag when interacting with editor inside
+      >
+        {/* Draggable Header */}
+        <div 
+          className="bg-white/10 p-3 cursor-move border-b border-white/20 flex items-center justify-between"
+          onMouseDown={startDrag}
+        >
+          <span className="text-[var(--text-a)] text-sm">Text Editor</span>
+          <button 
+            onClick={() => setShowTextEditor(false)}
+            className="text-[var(--text-a)] hover:text-red-500 transition-colors"
+            title="Close"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Editor Content */}
+        <div className="p-4 space-y-4">
+          {/* Text Input */}
+          <input
+            type="text"
+            placeholder="Type your text..."
+            value={textInput}
+            onChange={(e) => setTextInput(e.target.value)}
+            className="w-full bg-white/10 border border-white/20 rounded-md text-[var(--text-a)] p-2 focus:outline-none focus:ring-2 focus:ring-[var(--text-b)] transition-all"
+          />
+
+          {/* Formatting Buttons */}
+          <div className="flex items-center justify-center gap-2">
+            {[
+              { 
+                title: "Bold", 
+                value: bold, 
+                onClick: () => setBold(!bold),
+                activeClass: "font-bold bg-white/20"
+              },
+              { 
+                title: "Italic", 
+                value: italic, 
+                onClick: () => setItalic(!italic),
+                activeClass: "italic bg-white/20"
+              },
+              { 
+                title: "Underline", 
+                value: underline, 
+                onClick: () => setUnderline(!underline),
+                activeClass: "underline bg-white/20"
+              },
+              { 
+                title: "Strikethrough", 
+                value: strike, 
+                onClick: () => setStrike(!strike),
+                activeClass: "line-through bg-white/20"
+              }
+            ].map((button) => (
+              <button
+                key={button.title}
+                onClick={button.onClick}
+                className={`w-8 h-8 rounded-md border border-white/20 text-[var(--text-a)] 
+                  transition-all hover:bg-white/10 
+                  ${button.value ? button.activeClass : ''}`}
+                title={button.title}
+              >
+                {button.title[0]}
+              </button>
+            ))}
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex items-center justify-between gap-2">
+            <button
+              onClick={applyTextToCanvas}
+              className="flex-1 bg-green-500/20 border border-green-500/30 text-green-500 
+                py-2 rounded-md hover:bg-green-500/30 transition-colors"
+            >
+              Apply
+            </button>
+            <button
+              onClick={() => setShowTextEditor(false)}
+              className="flex-1 bg-red-500/20 border border-red-500/30 text-red-500 
+                py-2 rounded-md hover:bg-red-500/30 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
         </div>
 
         {/* Toolbar */}
-        <div className="flex flex-row items-center gap-4 p-4 rounded-md bg-transparent border border-[var(--text-b)] w-full justify-between flex-wrap">
+        <div className="flex flex-row items-center gap-4 p-4 rounded-md bg-transparent border border-[var(--text-c)] w-full justify-between ">
           {/* Brush Tools */}
-          <div className="flex items-center gap-2 bg-transparent border border-[var(--text-b)] p-2 rounded-md">
+          <div className="flex items-center gap-2 bg-transparent border border-[var(--text-b)] p-2 rounded-lg">
             <input
               type="color"
               value={drawingColor}
               onChange={handleColorChange}
-              className="w-8 h-8 p-0 border-none outline-none bg-transparent cursor-pointer rounded-full"
+              className="w-8 h-8 p-0 border-none outline-none focus:outline-none appearance-none bg-transparent cursor-pointer rounded-lg"
             />
             <input
-              type="number"
-              min={1}
-              max={50}
+              type="text"
               value={brushSize}
               onChange={handleBrushSizeChange}
-              className="w-12 text-sm p-1 bg-transparent text-[var(--text-a)] border border-[var(--text-b)] focus:outline-none"
+              className="w-8 text-sm rounded-lg p-1 bg-transparent text-[var(--text-a)] border border-[var(--text-c)] focus:outline-none appearance-none"
               title="Brush Size"
+              placeholder="size"
             />
           </div>
 
           {/* Text Mode Button */}
           <button
             onClick={() => setShowTextEditor(!showTextEditor)}
-            className="bg-transparent border border-[var(--text-b)] text-[var(--text-a)] py-1 px-3 hover:bg-[var(--ring)] transition-colors"
+            className="bg-transparent border border-[var(--text-b)] hover:bg-[var(--bg-b)] hover:border-[var(--text-c)] text-[var(--text-a)] py-2 px-4 sm:px-8 text-sm rounded-lg transition-colors"
           >
-            {showTextEditor ? "Close Text Editor" : "Open Text Editor"}
+            <div className="flex flex-row">
+              <span className="mr-2">Editor</span>
+              <svg width="20" height="20" fill="#ffffff" viewBox="0 0 24 24"><path fill="#ffffff" fillRule="evenodd" d="M4 5.5a.5.5 0 0 1 .5-.5h15a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-1 0V6h-6.5v13H15a.5.5 0 0 1 0 1H9a.5.5 0 0 1 0-1h2.5V6H5v2.5a.5.5 0 0 1-1 0z" clipRule="evenodd"></path></svg>
+            </div>
           </button>
 
           {/* Download Button */}
           <button
             onClick={downloadImage}
-            className="flex items-center justify-center py-2 px-4 sm:px-8 text-sm rounded-full transition-colors bg-transparent border border-[var(--text-b)] text-[var(--text-a)] hover:bg-[var(--ring)]"
+            className="flex items-center justify-center py-2 px-4 sm:px-8 text-sm rounded-lg transition-colors bg-transparent border border-[var(--text-b)] text-[var(--text-a)] hover:bg-[var(--bg-b)] hover:border-[var(--text-c)]"
           >
             <span className="mr-2">Download</span>
             <Image
               aria-hidden
               src="/download.svg"
               alt="Download Icon"
-              width={20}
-              height={20}
+              width={19}
+              height={19}
             />
           </button>
         </div>
