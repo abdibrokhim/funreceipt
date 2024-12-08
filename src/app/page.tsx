@@ -94,6 +94,55 @@ export default function Home() {
     setLastY(null);
   };
 
+  const handleTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (showTextEditor) return;
+    
+    const touch = e.touches[0];
+    const rect = (e.target as HTMLCanvasElement).getBoundingClientRect();
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+  
+    setIsDrawing(true);
+    setLastX(x);
+    setLastY(y);
+  };
+  
+  const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (!isDrawing || !ctxRef.current || showTextEditor) return;
+  
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+  
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+  
+    const size = parseInt(brushSize, 10) || 3;
+    ctxRef.current.strokeStyle = drawingColor;
+    ctxRef.current.lineWidth = size;
+    ctxRef.current.lineCap = "round";
+  
+    if (lastX !== null && lastY !== null) {
+      ctxRef.current.beginPath();
+      ctxRef.current.moveTo(lastX, lastY);
+      ctxRef.current.lineTo(x, y);
+      ctxRef.current.stroke();
+    }
+  
+    setLastX(x);
+    setLastY(y);
+  
+    // Prevent scrolling while drawing
+    e.preventDefault();
+  };
+  
+  const handleTouchEnd = () => {
+    setIsDrawing(false);
+    setLastX(null);
+    setLastY(null);
+  };
+
   const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setDrawingColor(e.target.value);
   };
@@ -200,7 +249,7 @@ export default function Home() {
   };
 
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] bg-[var(--bg-a)] items-center justify-items-center min-h-screen p-8 pb-20 gap-8 font-[family-name:var(--font-geist-sans)]">
+    <div className="grid grid-rows-[20px_1fr_20px] bg-[var(--bg-a)] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 font-[family-name:var(--font-geist-sans)]">
       <Analytics />
       <main className="flex flex-col gap-8 row-start-2 items-center sm:items-center relative">
         <div className="relative border border-[var(--text-c)] bg-transparent p-2">
@@ -217,12 +266,15 @@ export default function Home() {
           {/* Drawing canvas overlay */}
           <canvas
             ref={canvasRef}
-            className="absolute top-0 left-0 cursor-[url('/pen-cursor.png'),_crosshair]"
+            className="absolute top-0 left-0 cursor-[url('/pen-image.svg'),_crosshair]"
             style={{ pointerEvents: "auto" }}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
           />
 
           {/* Text Editor Overlay (Modal) */}
