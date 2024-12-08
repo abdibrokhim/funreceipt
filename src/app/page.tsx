@@ -207,7 +207,7 @@ export default function Home() {
           {/* Base image */}
           <Image
             ref={imageRef}
-            src="/funreceipt.svg"
+            src="/receipt.svg"
             alt="funreceipt"
             width={270}
             height={640}
