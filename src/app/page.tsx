@@ -209,8 +209,8 @@ export default function Home() {
             ref={imageRef}
             src="/receipt.svg"
             alt="funreceipt"
-            width={270}
-            height={640}
+            width={328}
+            height={764}
             priority
             className="select-none"
           />
